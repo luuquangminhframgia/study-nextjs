@@ -1,21 +1,55 @@
 import Layout from '../components/MyLayout.js'
 import Link from 'next/link'
+import fetch from 'isomorphic-unfetch'
 
-const PostLink = props => (
-  <li>
-    <Link as={`/p/${props.id}`} href={`/post?title=${props.title}`}>
-      <a>{props.title}</a>
-    </Link>
-  </li>
-)
+class Index extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      search: '',
+      shows: props.shows || []
+    };
+  }
 
-export default () => (
-  <Layout>
-    <h1>My Blog</h1>
-    <ul>
-      <PostLink id="hello-nextjs" title="Hello Next.js" />
-      <PostLink id="learn-nextjs" title="Learn Next.js is awesome" />
-      <PostLink id="deploy-nextjs" title="Deploy apps with Zeit" />
-    </ul>
-  </Layout>
-)
+  static async getInitialProps() {
+    const res = await fetch('https://api.tvmaze.com/search/shows?q=batman')
+    const data = await res.json();
+    const shows = data.map(entry => entry.show);
+  
+    return {shows};
+  }
+
+  handleSearch = (e) => {
+    const search = e.target.value;
+    this.setState({search})
+
+    fetch(`https://api.tvmaze.com/search/shows?q=${search}`).then( res => {
+      return res.json();
+    }).then(data => {
+      const shows = data.map(entry => entry.show);
+      this.setState({shows});
+    })
+  }
+
+  render () {
+    const {shows, search} = this.state;
+    return (
+      <Layout>
+        <h1>Batman TV Shows</h1>
+        <input type="text" onChange={this.handleSearch} value={search} />
+        <ul>
+          {shows.map(show => (
+            <li key={show.id}>
+              <Link as={`/p/${show.id}`} href={`/post?id=${show.id}`}>
+                <a>{show.name}</a>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Layout>
+    )
+  }
+}
+
+export default Index
+
