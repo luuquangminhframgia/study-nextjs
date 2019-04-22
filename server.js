@@ -24,6 +24,12 @@ app
       if (err) throw err
       console.log('> Ready on http://localhost:3000')
     })
+
+    server.get('/p/:id', (req, res) => {
+      const actualPage = '/post'
+      const queryParams = { id: req.params.id }
+      app.render(req, res, actualPage, queryParams)
+    })
   })
   .catch(ex => {
     console.error(ex.stack)
